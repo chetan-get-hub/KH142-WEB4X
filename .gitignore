@@ -36,3 +36,8 @@ wheels/
 *.log
 scratch/
 temp_uploads/
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
