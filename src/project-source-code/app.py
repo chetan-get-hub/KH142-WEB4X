@@ -12,6 +12,8 @@ import plotly.io as pio
 
 # Add project-source-code to sys.path for robust imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import components.splash as splash_component
+import components.login as login_component
 
 from config.settings import (
     APP_BRAND,
@@ -54,6 +56,12 @@ st.set_page_config(
 
 # Session State Initialization
 if "authenticated" not in st.session_state:
+    # Show splash screen on first load
+    if not st.session_state.get("splash_shown", False):
+        splash_component.show()
+        st.session_state.splash_shown = True
+        st.rerun()
+
     st.session_state.authenticated = False
 if "username" not in st.session_state:
     st.session_state.username = ""
@@ -346,7 +354,14 @@ st.markdown(theme_css, unsafe_allow_html=True)
 backend_client = BackendClient()
 health_info = backend_client.check_health()
 
-# Top Navigation Bar
+# -------------------------------------------------------------
+# 1. AUTHENTICATION SCREEN
+# -------------------------------------------------------------
+if not st.session_state.authenticated:
+    login_component.render_login_page(is_dark)
+    st.stop()
+
+# Top Navigation Bar (Rendered only for authenticated users)
 col_logo, col_nav, col_user = st.columns([2.5, 3, 1.5])
 
 with col_logo:
@@ -376,29 +391,6 @@ with col_user:
             st.session_state.pipeline_result = None
             st.session_state.backend_response = None
             st.rerun()
-
-# -------------------------------------------------------------
-# 1. AUTHENTICATION SCREEN
-# -------------------------------------------------------------
-if not st.session_state.authenticated:
-    st.markdown("---")
-    auth_col1, auth_col2, auth_col3 = st.columns([1, 2, 1])
-    with auth_col2:
-        st.markdown(f"### 🔐 **{APP_BRAND} Analyst Sign In**")
-        st.caption(f"{APP_DISPLAY_NAME} • Hackathon Authentication")
-        with st.form("login_form"):
-            user_input = st.text_input("Username / Email", value="analyst@dc4x.io")
-            pass_input = st.text_input("Password", type="password", value="demo123")
-            submitted = st.form_submit_button("Enter DC4X Workspace", use_container_width=True)
-            if submitted:
-                if user_input:
-                    st.session_state.authenticated = True
-                    st.session_state.username = user_input
-                    st.success("Welcome to DC4X!")
-                    st.rerun()
-                else:
-                    st.error("Please enter a username.")
-    st.stop()
 
 # -------------------------------------------------------------
 # 2. SYSTEM & DATABASE CONTROL VIEW
