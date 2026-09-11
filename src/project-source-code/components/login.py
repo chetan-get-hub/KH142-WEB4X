@@ -1,6 +1,6 @@
 """
 DC4X - Login Page UI Component
-Provides a premium, responsive, theme-aware authentication view.
+Provides a premium, responsive, theme-aware authentication view with single primary Sign In and secondary Register action.
 """
 import streamlit as st
 from config.settings import APP_BRAND, APP_DISPLAY_NAME, LOGO_DARK_PATH, LOGO_LIGHT_PATH, LOGO_PATH
@@ -9,7 +9,7 @@ import os
 def render_login_page(is_dark: bool):
     """
     Renders the DC4X authentication UI with centered card layout,
-    theme switching, segmented controls, and accessible input fields.
+    single primary Sign In form button, and secondary Register action beneath.
     """
     # -------------------------------------------------------------
     # 1. SCOPED STYLESHEET FOR LOGIN PAGE
@@ -32,10 +32,13 @@ def render_login_page(is_dark: bool):
     input_border = "#2A2A3D" if is_dark else "#CBD5E1"
     input_text = "#F4EAD3" if is_dark else "#0F172A"
 
-    seg_bg = "#1A1A28" if is_dark else "#F1F5F9"
-    seg_active_bg = "#00A8FF" if is_dark else "#0284C7"
-    seg_active_text = "#FFFFFF"
-    seg_inactive_text = "#8E8EA0" if is_dark else "#64748B"
+    sec_btn_bg = "#181826" if is_dark else "#FFFFFF"
+    sec_btn_border = "#2E2E42" if is_dark else "#CBD5E1"
+    sec_btn_text = "#D6D3E6" if is_dark else "#334155"
+    sec_btn_hover_bg = "#222234" if is_dark else "#F8FAFC"
+
+    divider_color = "rgba(255, 255, 255, 0.12)" if is_dark else "#E2E8F0"
+    divider_text = "#64748B" if is_dark else "#94A3B8"
 
     login_css = f"""
     <style>
@@ -55,7 +58,7 @@ def render_login_page(is_dark: bool):
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px 10px;
+            padding: 10px 10px 20px 10px;
             margin: 0 auto;
             width: 100%;
         }}
@@ -65,7 +68,7 @@ def render_login_page(is_dark: bool):
             background: {bg_card};
             border: 1px solid {border_card};
             border-radius: 24px;
-            padding: 42px 38px 36px 38px;
+            padding: 38px 36px 34px 36px;
             width: 100%;
             max-width: 440px;
             box-shadow: {shadow_card};
@@ -76,7 +79,7 @@ def render_login_page(is_dark: bool):
         /* Brand Typography Header */
         .dc4x-brand-header {{
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }}
 
         .dc4x-logo-title {{
@@ -96,7 +99,7 @@ def render_login_page(is_dark: bool):
 
         .dc4x-logo-tagline {{
             font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-weight: 600;
             color: {text_secondary};
             letter-spacing: 0.05em;
@@ -110,7 +113,7 @@ def render_login_page(is_dark: bool):
             font-size: 1.35rem;
             font-weight: 700;
             color: {text_primary};
-            margin-top: 18px;
+            margin-top: 6px;
             margin-bottom: 4px;
             text-align: center;
         }}
@@ -119,40 +122,7 @@ def render_login_page(is_dark: bool):
             font-size: 0.88rem;
             color: {text_secondary};
             text-align: center;
-            margin-bottom: 24px;
-        }}
-
-        /* Segmented control wrapper */
-        .dc4x-segmented-control {{
-            display: flex;
-            background: {seg_bg};
-            border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 20px;
-        }}
-
-        .dc4x-seg-btn {{
-            flex: 1;
-            padding: 8px 0;
-            text-align: center;
-            font-size: 0.82rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            border-radius: 9px;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }}
-
-        .dc4x-seg-btn.active {{
-            background: {seg_active_bg};
-            color: {seg_active_text} !important;
-            box-shadow: {"0 2px 10px rgba(0, 168, 255, 0.3)" if is_dark else "0 2px 6px rgba(2, 132, 199, 0.2)"};
-        }}
-
-        .dc4x-seg-btn.inactive {{
-            color: {seg_inactive_text};
-            background: transparent;
+            margin-bottom: 22px;
         }}
 
         /* Streamlit Input Styling Overrides inside Form */
@@ -191,13 +161,14 @@ def render_login_page(is_dark: bool):
             color: #FFFFFF !important;
             border: none !important;
             border-radius: 12px !important;
-            padding: 12px 20px !important;
-            font-size: 1rem !important;
+            padding: 13px 20px !important;
+            font-size: 1.02rem !important;
             font-weight: 700 !important;
             letter-spacing: 0.02em !important;
             box-shadow: {"0 4px 18px rgba(0, 168, 255, 0.35)" if is_dark else "0 4px 14px rgba(2, 132, 199, 0.25)"} !important;
             transition: all 0.2s ease !important;
-            margin-top: 10px !important;
+            margin-top: 8px !important;
+            margin-bottom: 4px !important;
             cursor: pointer !important;
         }}
 
@@ -211,13 +182,49 @@ def render_login_page(is_dark: bool):
             transform: translateY(1px) !important;
         }}
 
-        /* Top Bar theme toggle button styling */
-        .dc4x-theme-toggle-bar {{
+        /* Secondary Action Button (Register / Back) */
+        .dc4x-secondary-action button {{
+            background-color: {sec_btn_bg} !important;
+            color: {sec_btn_text} !important;
+            border: 1px solid {sec_btn_border} !important;
+            border-radius: 12px !important;
+            padding: 10px 18px !important;
+            font-size: 0.92rem !important;
+            font-weight: 600 !important;
+            transition: all 0.2s ease !important;
+            cursor: pointer !important;
+            margin-top: 4px !important;
+        }}
+
+        .dc4x-secondary-action button:hover {{
+            background-color: {sec_btn_hover_bg} !important;
+            border-color: {accent_cyan} !important;
+            color: {accent_cyan} !important;
+            box-shadow: {"0 2px 10px rgba(0, 168, 255, 0.15)" if is_dark else "0 2px 8px rgba(2, 132, 199, 0.1)"} !important;
+        }}
+
+        /* Visual Divider between Primary and Secondary actions */
+        .dc4x-auth-divider {{
             display: flex;
-            justify-content: flex-end;
-            width: 100%;
-            max-width: 440px;
-            margin-bottom: 12px;
+            align-items: center;
+            text-align: center;
+            margin: 16px 0 12px 0;
+            color: {divider_text};
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+        }}
+
+        .dc4x-auth-divider::before,
+        .dc4x-auth-divider::after {{
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid {divider_color};
+        }}
+
+        .dc4x-auth-divider span {{
+            padding: 0 12px;
         }}
     </style>
     """
@@ -226,15 +233,17 @@ def render_login_page(is_dark: bool):
     # -------------------------------------------------------------
     # 2. LOGIN PAGE CONTAINER
     # -------------------------------------------------------------
-    # Session state for mode tab (Sign In vs Register)
+    # Session state for auth mode (signin vs register)
     if "auth_mode" not in st.session_state:
         st.session_state.auth_mode = "signin"
+
+    is_signin = (st.session_state.auth_mode == "signin")
 
     # Outer Layout Columns for exact centering
     col_l, col_center, col_r = st.columns([1, 2.2, 1])
 
     with col_center:
-        # Top bar with Theme Switcher & Info
+        # Top Bar: Theme Switcher
         t_col1, t_col2 = st.columns([3, 1])
         with t_col2:
             current_theme_label = "☀️ Light" if is_dark else "🌙 Dark"
@@ -243,7 +252,7 @@ def render_login_page(is_dark: bool):
                 st.session_state.theme_mode = next_theme
                 st.rerun()
 
-        # Render Header & Logo inside Card
+        # Render Header & Card Shell
         st.markdown(f"""
         <div class="dc4x-login-outer">
             <div class="dc4x-login-card">
@@ -253,26 +262,16 @@ def render_login_page(is_dark: bool):
                 </div>
         """, unsafe_allow_html=True)
 
-        # Segmented Control (SIGN IN | REGISTER)
-        is_signin = (st.session_state.auth_mode == "signin")
-        seg_col1, seg_col2 = st.columns(2)
-        with seg_col1:
-            if st.button("SIGN IN", key="btn_seg_signin", use_container_width=True, type="primary" if is_signin else "secondary"):
-                st.session_state.auth_mode = "signin"
-                st.rerun()
-        with seg_col2:
-            if st.button("REGISTER", key="btn_seg_register", use_container_width=True, type="primary" if not is_signin else "secondary"):
-                st.session_state.auth_mode = "register"
-                st.rerun()
-
-        # Welcome Text
         if is_signin:
+            # ---------------------------------------------------------
+            # SIGN IN VIEW: Single primary Sign In button + Secondary Register
+            # ---------------------------------------------------------
             st.markdown("""
             <div class="dc4x-welcome-title">Welcome back</div>
             <div class="dc4x-welcome-sub">Sign in to continue to your workspace.</div>
             """, unsafe_allow_html=True)
-            
-            # Form for Login
+
+            # Primary Sign In Form
             with st.form("login_form"):
                 user_input = st.text_input(
                     "Username / Email",
@@ -287,9 +286,9 @@ def render_login_page(is_dark: bool):
                     placeholder="••••••••",
                     key="login_pass"
                 )
-                
+
                 submitted = st.form_submit_button("Sign In →", use_container_width=True)
-                
+
                 if submitted:
                     if user_input and user_input.strip():
                         st.session_state.authenticated = True
@@ -299,18 +298,39 @@ def render_login_page(is_dark: bool):
                         st.rerun()
                     else:
                         st.error("Authentication failed: Please enter a valid username or email.")
+
+            # Subtle separator
+            st.markdown("""
+            <div class="dc4x-auth-divider"><span>or</span></div>
+            """, unsafe_allow_html=True)
+
+            # Secondary Action: Register button below Sign In
+            st.markdown('<div class="dc4x-secondary-action">', unsafe_allow_html=True)
+            if st.button("Register / Request Access", key="btn_switch_to_register", use_container_width=True):
+                st.session_state.auth_mode = "register"
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+
         else:
-            # Register Mode Info Card
+            # ---------------------------------------------------------
+            # REGISTER VIEW: Information + Return to Sign In
+            # ---------------------------------------------------------
             st.markdown("""
             <div class="dc4x-welcome-title">Workspace Registration</div>
-            <div class="dc4x-welcome-sub">Self-service registration is managed by your workspace admin.</div>
+            <div class="dc4x-welcome-sub">Self-service registration & account provisioning</div>
             """, unsafe_allow_html=True)
-            
-            st.info("🔐 Account creation for DC4X is restricted to authorized analysts. Please contact your system administrator to request access credentials.")
-            
-            if st.button("Return to Sign In", key="btn_back_to_signin", use_container_width=True):
+
+            st.info("🔐 Account creation for DC4X is restricted to authorized analysts. Please contact your workspace administrator to request access credentials.")
+
+            st.markdown("""
+            <div class="dc4x-auth-divider"><span>already have an account?</span></div>
+            """, unsafe_allow_html=True)
+
+            st.markdown('<div class="dc4x-secondary-action">', unsafe_allow_html=True)
+            if st.button("← Back to Sign In", key="btn_back_to_signin", use_container_width=True):
                 st.session_state.auth_mode = "signin"
                 st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
         # Close Login Card DIV
         st.markdown("""
