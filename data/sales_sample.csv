@@ -1,0 +1,14 @@
+TransactionID,Date,Region,Category,SalesAmount,UnitsSold,CustomerRating
+TX1001,2024-01-01,North,Electronics, 1500.50 ,10,4.5
+TX1002,2024-01-02,South,Apparel,250.00,5,4.0
+TX1003,2024-01-03, East ,Electronics,3200.00,20,4.8
+TX1004,2024-01-04,West,Home & Kitchen,NA,3,3.5
+TX1005,2024-01-05,North,Apparel,450.75,8,4.2
+TX1002,2024-01-02,South,Apparel,250.00,5,4.0
+TX1006,2024-01-06,South,Electronics,120000.00,1,5.0
+TX1007,2024-01-07,East,Home & Kitchen,180.20,2,N/A
+TX1008,2024-01-08,West,Electronics,890.00,6,4.1
+TX1009,2024-01-09, north ,Apparel,310.00,4,3.9
+TX1010,2024-01-10,South,Electronics,2100.00,12,4.6
+TX1011,2024-01-11,East,Apparel,150.00,3,4.0
+TX1012,2024-01-12,West,Home & Kitchen,540.00,7,4.3

@@ -1,0 +1,11 @@
+EmpID,JoinDate,Department,Salary,PerformanceScore,YearsExperience,AttritionRisk
+EMP-01,2021-03-15,Engineering, 85000 ,4.2,5,Low
+EMP-02,2019-06-20,HR,62000,3.8,7,Low
+EMP-03,2022-01-10, Sales ,72000,4.5,3,Medium
+EMP-04,2018-11-05,Engineering,195000,4.9,12,High
+EMP-05,2023-04-01,Marketing,55000,NA,1,Medium
+EMP-02,2019-06-20,HR,62000,3.8,7,Low
+EMP-06,2020-08-14,engineering,88000,4.0,6,Low
+EMP-07,2021-12-01,Sales,68000,3.5,4,High
+EMP-08,2017-02-28,Engineering,92000,4.3,8,Low
+EMP-09,2022-09-15,HR,58000,3.9,2,Medium

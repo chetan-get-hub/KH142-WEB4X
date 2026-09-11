@@ -1,0 +1,11 @@
+PatientID,AdmissionDate,Department,Age,SystolicBP,Cholesterol,TreatmentCost,Discharged
+P-101,2024-02-01,Cardiology,54,120,200, 4500.00 ,True
+P-102,2024-02-02,Neurology,62,140,240,5800.00,False
+P-103,2024-02-03, Orthopedics ,45,118,180,3200.00,True
+P-104,2024-02-04,Cardiology,71,210,310,45000.00,False
+P-105,2024-02-05,Pediatrics,8,100,NA,1200.00,True
+P-102,2024-02-02,Neurology,62,140,240,5800.00,False
+P-106,2024-02-06,cardiology,58,125,215,4900.00,True
+P-107,2024-02-07,Neurology,39,115,190,2900.00,True
+P-108,2024-02-08,Orthopedics,67,135,225,6100.00,False
+P-109,2024-02-09,Cardiology,50,122,205,4300.00,True
