@@ -1,5 +1,9 @@
+"""
+DC4X: Data Cleaning For You - Database Engine, Session Maker & Diagnostics
+"""
 import logging
-from typing import Generator, Tuple
+from urllib.parse import urlparse
+from typing import Generator, Tuple, Dict, Any
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 from config.settings import DATABASE_URL
@@ -49,6 +53,35 @@ def check_db_connection() -> Tuple[bool, str]:
     except Exception as e:
         return False, f"Database connection unavailable: {str(e)}"
 
+def get_db_safe_info() -> Dict[str, Any]:
+    """
+    Returns sanitized database configuration metadata without passwords or secrets.
+    """
+    is_conn, msg = check_db_connection()
+    try:
+        parsed = urlparse(DATABASE_URL)
+        return {
+            "is_connected": is_conn,
+            "engine": "PostgreSQL (SQLAlchemy + Psycopg 3)",
+            "host": parsed.hostname or "localhost",
+            "port": parsed.port or 5432,
+            "database": (parsed.path or "").lstrip("/") or "datacleaning4u",
+            "username": parsed.username or "postgres",
+            "message": msg,
+            "connection_locked": is_conn
+        }
+    except Exception:
+        return {
+            "is_connected": is_conn,
+            "engine": "PostgreSQL",
+            "host": "localhost",
+            "port": 5432,
+            "database": "datacleaning4u",
+            "username": "postgres",
+            "message": msg,
+            "connection_locked": is_conn
+        }
+
 def init_db() -> bool:
     """
     Initializes PostgreSQL tables according to declared SQLAlchemy models.
@@ -58,7 +91,7 @@ def init_db() -> bool:
     try:
         from db import models  # noqa: F401
         Base.metadata.create_all(bind=engine)
-        logger.info("Database tables initialized successfully.")
+        logger.info("DC4X database tables initialized successfully.")
         return True
     except Exception as e:
         logger.error(f"Failed to initialize database tables: {e}")

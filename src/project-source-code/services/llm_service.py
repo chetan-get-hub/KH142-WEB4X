@@ -1,7 +1,11 @@
+"""
+DC4X: Data Cleaning For You - Official Google Gemini Free-Tier Service
+Converts machine-readable structured findings into natural-language explanations.
+"""
 import os
 import json
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 from pydantic import BaseModel, Field
 
 from config.settings import GEMINI_API_KEY, GEMINI_MODEL, LLM_FREE_ONLY
@@ -25,13 +29,17 @@ class AISummaryResponse(BaseModel):
 
 class GeminiService:
     """
-    Official Google Gemini Free-Tier Service for DataCleaning4U.
-    Converts machine-readable structured findings into natural-language explanations.
+    Official Google Gemini Free-Tier Service for DC4X.
+    Translates verified statistical findings into structured executive narratives.
     """
 
     def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY", "") or GEMINI_API_KEY
-        self.model = model or os.getenv("GEMINI_MODEL", "") or GEMINI_MODEL or "gemini-2.5-flash"
+        if api_key is not None:
+            raw_key = api_key
+        else:
+            raw_key = os.getenv("GEMINI_API_KEY", "") or GEMINI_API_KEY
+        self.api_key = raw_key.strip("\"' ") if raw_key else ""
+        self.model = (model or os.getenv("GEMINI_MODEL", "") or GEMINI_MODEL or "gemini-3.6-flash").strip("\"' ")
         self.free_only = LLM_FREE_ONLY
         self.client = None
 
@@ -45,15 +53,36 @@ class GeminiService:
 
     def is_available(self) -> bool:
         """Returns True if Gemini API key is configured."""
-        return bool(self.api_key and len(self.api_key.strip()) > 5)
+        return bool(self.api_key and len(self.api_key) > 5)
+
+    def test_connection(self) -> Tuple[bool, str]:
+        """
+        Sends a minimal, zero-cost token verification request to confirm live connectivity.
+        """
+        if not self.is_available():
+            return False, "Gemini API key is not configured in .env."
+        try:
+            if self.client is None:
+                from google import genai
+                self.client = genai.Client(api_key=self.api_key)
+            
+            res = self.client.models.generate_content(
+                model=self.model,
+                contents="Respond with the single word OK."
+            )
+            if res and res.text:
+                return True, f"Google Gemini Free-Tier ({self.model}) connected successfully."
+            return False, "Gemini API returned an empty response."
+        except Exception as e:
+            return False, f"Gemini connection failed: {str(e)}"
 
     def generate_narrative_explanation(
         self,
         pipeline_payload: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Takes structured pipeline JSON (from to_serializable_dict) and requests
-        a structured natural-language explanation from Google Gemini Free-Tier API.
+        Takes structured pipeline JSON and requests a structured executive explanation
+        from Google Gemini Free-Tier API adhering strictly to calculated evidence.
         """
         # 1. Check API Key availability
         if not self.is_available():
@@ -88,16 +117,16 @@ class GeminiService:
         stats = pipeline_payload.get("statistical_summary", {})
 
         system_instruction = (
-            "You are the autonomous data analyst agent for DataCleaning4U. "
-            "Your objective is to provide an executive explanation of the supplied statistical analysis results. "
-            f"The target domain is '{domain}'.\n\n"
-            "STRICT RULES:\n"
-            "1. You MUST ONLY explain the verified facts provided in the payload.\n"
-            "2. NEVER invent, hallucinate, or estimate numbers not in the data.\n"
+            "You are the executive AI data explanation engine for DC4X (Data Cleaning For You). "
+            "Your objective is to provide a clear narrative explanation of verified statistical calculations. "
+            f"The target business domain is '{domain}'.\n\n"
+            "STRICT OPERATIONAL RULES:\n"
+            "1. You MUST ONLY explain the verified facts and statistics provided in the payload.\n"
+            "2. NEVER invent, extrapolate, or hallucinate numbers not present in the data.\n"
             "3. NEVER claim correlation proves causation.\n"
-            "4. Clearly distinguish calculated facts from business interpretations.\n"
-            "5. Translate statistical formulas into plain, actionable language for executives.\n"
-            "6. Keep language concise, professional, and highlight high-severity findings."
+            "4. Clearly distinguish calculated facts from strategic business interpretations.\n"
+            "5. Translate technical statistics into plain, actionable language for decision makers.\n"
+            "6. Keep language crisp, professional, and highlight critical anomalies."
         )
 
         user_content = {
@@ -105,7 +134,7 @@ class GeminiService:
             "dataset_name": file_name,
             "overview": overview,
             "cleaning_operations": cleaning,
-            "evidence_backed_findings": findings[:10],
+            "evidence_backed_findings": findings[:12],
             "anomaly_and_risk_audit": anomalies,
             "numerical_summary": stats.get("numerical", {}),
             "group_aggregations": stats.get("group_aggregations", {}),
@@ -115,7 +144,7 @@ class GeminiService:
         prompt_str = (
             f"Analyze and explain the following verified dataset findings for '{file_name}' in the '{domain}' domain.\n\n"
             f"Data Payload:\n{json.dumps(user_content, indent=2)}\n\n"
-            "Generate a structured narrative explanation adhering to the output schema."
+            "Generate a structured narrative explanation adhering strictly to the output schema."
         )
 
         try:

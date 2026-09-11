@@ -1,5 +1,5 @@
 """
-DataCleaning4U - Configuration Settings, Domain Metadata & Environment Loading
+DC4X: Data Cleaning For You - Configuration Settings, Domain Metadata & Environment Loading
 """
 import os
 from pathlib import Path
@@ -15,26 +15,36 @@ env_paths = [
 
 for env_path in env_paths:
     if env_path.exists():
-        load_dotenv(dotenv_path=env_path, override=False)
+        load_dotenv(dotenv_path=env_path, override=True)
         break
 
+# Branding Constants
+APP_BRAND = "DC4X"
+APP_DISPLAY_NAME = "Data Cleaning For You"
+APP_TITLE = "DC4X | Data Cleaning For You"
+ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
+LOGO_PATH = ASSETS_DIR / "logo.png"
+LOGO_DARK_PATH = ASSETS_DIR / "logo_dark.png"
+LOGO_LIGHT_PATH = ASSETS_DIR / "logo_light.png"
+LOGO_SVG_PATH = ASSETS_DIR / "logo.svg"
+
 # 1. Environment & API Settings
-APP_ENV = os.getenv("APP_ENV", "development")
-BACKEND_HOST = os.getenv("BACKEND_HOST", "127.0.0.1")
+APP_ENV = os.getenv("APP_ENV", "development").strip("\"' ")
+BACKEND_HOST = os.getenv("BACKEND_HOST", "127.0.0.1").strip("\"' ")
 BACKEND_PORT = int(os.getenv("BACKEND_PORT", "8000"))
-BACKEND_URL = os.getenv("BACKEND_URL", f"http://{BACKEND_HOST}:{BACKEND_PORT}")
+BACKEND_URL = os.getenv("BACKEND_URL", f"http://{BACKEND_HOST}:{BACKEND_PORT}").strip("\"' ")
 
 # 2. Google Gemini Free-Tier API Configuration
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")
-LLM_FREE_ONLY = os.getenv("LLM_FREE_ONLY", "true").lower() in ["true", "1", "yes"]
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip("\"' ")
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini").strip("\"' ")
+LLM_FREE_ONLY = os.getenv("LLM_FREE_ONLY", "true").strip("\"' ").lower() in ["true", "1", "yes"]
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash").strip("\"' ")
 
 # 3. PostgreSQL Database Connection (SQLAlchemy + Psycopg 3)
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql+psycopg://postgres:postgres@localhost:5432/datacleaning4u"
-)
+).strip("\"' ")
 
 # Supported Domains & Metadata
 SUPPORTED_DOMAINS = [

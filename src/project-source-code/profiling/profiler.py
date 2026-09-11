@@ -184,6 +184,8 @@ def profile_dataset(
             suitable_for_timeseries=suitable_time
         )
 
+    dup_count = int(df.duplicated().sum()) if total_rows > 0 else 0
+
     return DatasetProfile(
         total_rows=total_rows,
         total_columns=total_cols,
@@ -196,5 +198,6 @@ def profile_dataset(
         datetime_columns=dt_cols,
         boolean_columns=bool_cols,
         identifier_columns=id_cols,
-        domain_hint=domain
+        domain_hint=domain,
+        duplicate_count=dup_count
     )

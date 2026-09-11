@@ -151,37 +151,37 @@ def generate_html_report(pipeline_result: OverallPipelineResult) -> str:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DataCleaning4U Audit Report - {p.file_name}</title>
+    <title>DC4X Audit Report - {p.file_name}</title>
     <style>
-        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #F8FAFC; color: #0F172A; margin: 0; padding: 40px; line-height: 1.5; }}
-        .container {{ max-width: 960px; margin: 0 auto; background: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); padding: 40px; border: 1px solid #E2E8F0; }}
-        .header {{ border-bottom: 2px solid #E2E8F0; padding-bottom: 20px; margin-bottom: 30px; }}
-        .header h1 {{ color: #4F46E5; margin: 0 0 8px 0; font-size: 30px; font-weight: 800; }}
-        .header p {{ color: #64748B; margin: 0; font-size: 15px; font-weight: 500; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0F172A; color: #F1F5F9; margin: 0; padding: 40px; line-height: 1.5; }}
+        .container {{ max-width: 960px; margin: 0 auto; background: #1E293B; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.4); padding: 40px; border: 1px solid #334155; }}
+        .header {{ border-bottom: 2px solid #334155; padding-bottom: 20px; margin-bottom: 30px; }}
+        .header h1 {{ color: #00E5FF; margin: 0 0 8px 0; font-size: 30px; font-weight: 800; }}
+        .header p {{ color: #94A3B8; margin: 0; font-size: 15px; font-weight: 500; }}
         .card-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }}
-        .card {{ background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 18px; text-align: center; }}
-        .card .number {{ font-size: 24px; font-weight: 700; color: #4F46E5; }}
-        .card .label {{ font-size: 12px; color: #64748B; text-transform: uppercase; margin-top: 4px; font-weight: 600; letter-spacing: 0.5px; }}
-        h2 {{ color: #1E293B; border-bottom: 1px solid #E2E8F0; padding-bottom: 8px; margin-top: 35px; font-size: 20px; }}
+        .card {{ background: #0F172A; border: 1px solid #334155; border-radius: 8px; padding: 18px; text-align: center; }}
+        .card .number {{ font-size: 24px; font-weight: 700; color: #00E5FF; }}
+        .card .label {{ font-size: 12px; color: #94A3B8; text-transform: uppercase; margin-top: 4px; font-weight: 600; letter-spacing: 0.5px; }}
+        h2 {{ color: #F1F5F9; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-top: 35px; font-size: 20px; }}
         table {{ width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }}
-        th, td {{ padding: 10px 14px; border: 1px solid #E2E8F0; text-align: left; }}
-        th {{ background: #F8FAFC; color: #475569; font-weight: 600; }}
-        .badge {{ background: #EEF2FF; color: #4F46E5; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }}
-        .badge-high {{ background: #FEE2E2; color: #DC2626; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }}
-        .badge-med {{ background: #FEF3C7; color: #D97706; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }}
-        .badge-info {{ background: #E0F2FE; color: #0284C7; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }}
-        .finding-card {{ background: #F8FAFC; border-left: 4px solid #4F46E5; border-radius: 0 8px 8px 0; padding: 16px; margin-bottom: 14px; border: 1px solid #E2E8F0; border-left-width: 4px; }}
-        .finding-title {{ font-size: 15px; font-weight: 700; color: #1E293B; margin-bottom: 6px; }}
-        .finding-desc {{ font-size: 14px; color: #334155; margin-bottom: 6px; }}
-        .finding-evidence {{ font-size: 12px; color: #64748B; font-style: italic; }}
-        .footer {{ margin-top: 50px; text-align: center; font-size: 13px; color: #94A3B8; border-top: 1px solid #E2E8F0; padding-top: 20px; }}
+        th, td {{ padding: 10px 14px; border: 1px solid #334155; text-align: left; }}
+        th {{ background: #0F172A; color: #00E5FF; font-weight: 600; }}
+        .badge {{ background: #1E1B4B; color: #818CF8; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }}
+        .badge-high {{ background: #450A0A; color: #F87171; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }}
+        .badge-med {{ background: #451A03; color: #FBBF24; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }}
+        .badge-info {{ background: #082F49; color: #38BDF8; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }}
+        .finding-card {{ background: #0F172A; border-left: 4px solid #00E5FF; border-radius: 0 8px 8px 0; padding: 16px; margin-bottom: 14px; border: 1px solid #334155; border-left-width: 4px; }}
+        .finding-title {{ font-size: 15px; font-weight: 700; color: #F1F5F9; margin-bottom: 6px; }}
+        .finding-desc {{ font-size: 14px; color: #CBD5E1; margin-bottom: 6px; }}
+        .finding-evidence {{ font-size: 12px; color: #94A3B8; font-style: italic; }}
+        .footer {{ margin-top: 50px; text-align: center; font-size: 13px; color: #64748B; border-top: 1px solid #334155; padding-top: 20px; }}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>DataCleaning4U Executive Report</h1>
-            <p>Target Domain: <strong>{pipeline_result.domain}</strong> | Dataset: <strong>{p.file_name}</strong> {f'(Sheet: {pipeline_result.sheet_name})' if pipeline_result.sheet_name else ''}</p>
+            <h1>DC4X Executive Audit Report</h1>
+            <p><strong>Data Cleaning For You</strong> | Domain: <strong>{pipeline_result.domain}</strong> | Dataset: <strong>{p.file_name}</strong> {f'(Sheet: {pipeline_result.sheet_name})' if pipeline_result.sheet_name else ''}</p>
         </div>
 
         <div class="card-grid">
@@ -302,7 +302,7 @@ def generate_html_report(pipeline_result: OverallPipelineResult) -> str:
         </table>
 
         <div class="footer">
-            Generated autonomously by DataCleaning4U &copy; 2026. &bull; From raw data to useful insights.
+            Generated by DC4X (Data Cleaning For You) &copy; 2026.
         </div>
     </div>
 </body>
@@ -329,7 +329,7 @@ def generate_pdf_report_bytes(pipeline_result: OverallPipelineResult) -> bytes:
             parent=styles['Heading1'],
             fontSize=20,
             leading=24,
-            textColor=colors.HexColor('#4F46E5'),
+            textColor=colors.HexColor('#00E5FF'),
             spaceAfter=8
         )
         heading_style = ParagraphStyle(
@@ -358,8 +358,8 @@ def generate_pdf_report_bytes(pipeline_result: OverallPipelineResult) -> bytes:
         )
 
         elements = []
-        elements.append(Paragraph("DataCleaning4U Executive Report", title_style))
-        elements.append(Paragraph(f"<b>Domain:</b> {pipeline_result.domain} | <b>File:</b> {pipeline_result.profile.file_name}", body_style))
+        elements.append(Paragraph("DC4X Executive Audit Report", title_style))
+        elements.append(Paragraph(f"<b>Data Cleaning For You</b> | <b>Domain:</b> {pipeline_result.domain} | <b>File:</b> {pipeline_result.profile.file_name}", body_style))
         elements.append(Spacer(1, 10))
 
         # Metrics Card Table

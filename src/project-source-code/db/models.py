@@ -1,3 +1,6 @@
+"""
+DC4X: Data Cleaning For You - SQLAlchemy ORM Models
+"""
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, Integer, Float, Text, JSON, DateTime, ForeignKey
@@ -6,6 +9,10 @@ from db.database import Base
 
 def generate_uuid() -> str:
     return str(uuid.uuid4())
+
+def generate_run_code() -> str:
+    """Generates a clean human-readable identifier like DC4X-7A3F."""
+    return f"DC4X-{uuid.uuid4().hex[:6].upper()}"
 
 class User(Base):
     __tablename__ = "users"
@@ -21,6 +28,7 @@ class DatasetRun(Base):
     __tablename__ = "dataset_runs"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
+    run_code = Column(String(50), nullable=False, unique=True, default=generate_run_code, index=True)
     user_id = Column(String(36), ForeignKey("users.id"), nullable=True, index=True)
     file_name = Column(String(255), nullable=False)
     file_type = Column(String(50), nullable=False)
@@ -34,9 +42,9 @@ class DatasetRun(Base):
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     user = relationship("User", back_populates="dataset_runs")
-    findings = relationship("FindingRecord", back_populates="run", cascade="all, delete-orphan")
-    summaries = relationship("SummaryRecord", back_populates="run", cascade="all, delete-orphan")
-    reports = relationship("ReportRecord", back_populates="run", cascade="all, delete-orphan")
+    findings = relationship("FindingRecord", back_populates="run", cascade="all, delete-orphan", order_by="FindingRecord.created_at")
+    summaries = relationship("SummaryRecord", back_populates="run", cascade="all, delete-orphan", order_by="SummaryRecord.created_at")
+    reports = relationship("ReportRecord", back_populates="run", cascade="all, delete-orphan", order_by="ReportRecord.created_at")
 
 class FindingRecord(Base):
     __tablename__ = "findings"
@@ -74,7 +82,7 @@ class ReportRecord(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     run_id = Column(String(36), ForeignKey("dataset_runs.id"), nullable=False, index=True)
-    report_type = Column(String(50), nullable=False)  # 'HTML', 'PDF', 'CSV', 'XLSX'
+    report_type = Column(String(50), nullable=False)  # 'HTML', 'PDF', 'CSV', 'XLSX', 'JSON'
     file_name = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 

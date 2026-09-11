@@ -48,6 +48,10 @@ class ColumnProfile:
     suitable_for_measurement: bool = False
     suitable_for_timeseries: bool = False
 
+    @property
+    def missing_pct(self) -> float:
+        return self.missing_percentage
+
 @dataclass
 class DatasetProfile:
     total_rows: int
@@ -62,6 +66,15 @@ class DatasetProfile:
     boolean_columns: List[str]
     identifier_columns: List[str]
     domain_hint: Optional[str] = None
+    duplicate_count: int = 0
+
+    @property
+    def missing_cells(self) -> int:
+        return sum(c.missing_count for c in self.columns.values())
+
+    @property
+    def duplicate_rows(self) -> int:
+        return self.duplicate_count
 
 @dataclass
 class CleaningReport:
@@ -78,6 +91,10 @@ class CleaningReport:
     outliers_flagged_count: int
     warnings: List[str]
     cleaning_steps: List[Dict[str, Any]]
+
+    @property
+    def actions(self) -> List[Dict[str, Any]]:
+        return self.cleaning_steps
 
 @dataclass
 class AnalysisReport:
@@ -100,12 +117,35 @@ class AnomalyItem:
     explanation: str
     evidence_values: Dict[str, Any] = field(default_factory=dict)
 
+    @property
+    def reason(self) -> str:
+        return self.explanation
+
+    @property
+    def severity(self) -> str:
+        return "High" if self.score > 0.8 else "Medium" if self.score > 0.5 else "Low"
+
 @dataclass
 class AnomalyReport:
     total_anomalies_found: int
     data_quality_issues: List[Dict[str, Any]]
     statistical_anomalies: List[AnomalyItem]
     method_summaries: Dict[str, int]
+
+    @property
+    def items(self) -> List[AnomalyItem]:
+        return self.statistical_anomalies
+
+    @property
+    def outliers_by_column(self) -> Dict[str, int]:
+        counts = {}
+        for a in self.statistical_anomalies:
+            counts[a.column] = counts.get(a.column, 0) + 1
+        return counts
+
+    @property
+    def multivariate_anomalies(self) -> List[AnomalyItem]:
+        return [a for a in self.statistical_anomalies if a.method == "IsolationForest"]
 
 @dataclass
 class VisualizationResult:
@@ -117,6 +157,16 @@ class VisualizationResult:
     columns_used: List[str] = field(default_factory=list)
     reason: str = ""
     domain_relevance: str = ""
+    key_takeaway: str = ""
+    analytical_question: str = ""
+
+    @property
+    def figure(self):
+        try:
+            import plotly.io as pio
+            return pio.from_json(self.plotly_json)
+        except Exception:
+            return None
 
 @dataclass
 class TableSummary:
@@ -138,10 +188,25 @@ class OverallPipelineResult:
     cleaning_report: CleaningReport
     analysis_report: AnalysisReport
     anomaly_report: AnomalyReport
-    automatic_charts: List[VisualizationResult]
-    summary_text: str
+    automatic_charts: List[VisualizationResult] = field(default_factory=list)
+    summary_text: str = ""
     table_summaries: List[TableSummary] = field(default_factory=list)
     findings: List[Finding] = field(default_factory=list)
+    visualizations: Optional[List[VisualizationResult]] = None
+    overall_summary: Optional[str] = None
+
+    def __post_init__(self):
+        # Sync visualizations <-> automatic_charts
+        if self.visualizations is not None and not self.automatic_charts:
+            self.automatic_charts = self.visualizations
+        elif self.automatic_charts and self.visualizations is None:
+            self.visualizations = self.automatic_charts
+
+        # Sync overall_summary <-> summary_text
+        if self.overall_summary is not None and not self.summary_text:
+            self.summary_text = self.overall_summary
+        elif self.summary_text and self.overall_summary is None:
+            self.overall_summary = self.summary_text
 
     def to_serializable_dict(self) -> Dict[str, Any]:
         """

@@ -1,6 +1,7 @@
 import pytest
 import os
 import sys
+import uuid
 from fastapi.testclient import TestClient
 
 from api.main import app
@@ -14,7 +15,9 @@ def test_fastapi_health_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
-    assert "database_connected" in data
+    assert data["app_brand"] == "DC4X"
+    assert data["app_display_name"] == "Data Cleaning For You"
+    assert "database" in data
     assert "gemini_configured" in data
     assert "gemini_model" in data
 
@@ -28,16 +31,18 @@ def test_database_initialization_and_models():
     # Test SessionLocal CRUD
     db = SessionLocal()
     try:
-        # Create test user
-        test_user = User(username="test_analyst@datacleaning4u.io", email="test_analyst@datacleaning4u.io")
+        unique_uname = f"test_analyst_{uuid.uuid4().hex[:6]}@dc4x.io"
+        test_user = User(username=unique_uname, email=unique_uname)
         db.add(test_user)
         db.commit()
         db.refresh(test_user)
         assert test_user.id is not None
 
         # Create test run
+        run_code = f"DC4X-{uuid.uuid4().hex[:6].upper()}"
         test_run = DatasetRun(
             user_id=test_user.id,
+            run_code=run_code,
             file_name="test_sales.csv",
             file_type="CSV",
             domain="Sales & Retail",
@@ -49,6 +54,7 @@ def test_database_initialization_and_models():
         db.commit()
         db.refresh(test_run)
         assert test_run.id is not None
+        assert test_run.run_code == run_code
 
         # Create finding
         test_finding = FindingRecord(
@@ -69,7 +75,7 @@ def test_database_initialization_and_models():
             run_id=test_run.id,
             summary_type="DETERMINISTIC",
             content="Test deterministic summary",
-            model_name="DataCleaning4U-Engine"
+            model_name="DC4X-Engine"
         )
         db.add(test_sum)
         db.commit()
@@ -88,11 +94,12 @@ def test_database_initialization_and_models():
         db.close()
 
 def test_create_and_get_analysis_run_endpoint():
+    unique_user = f"api_test_{uuid.uuid4().hex[:6]}@dc4x.io"
     sample_payload = {
         "domain": "Healthcare",
         "file_name": "healthcare_test.csv",
         "sheet_name": None,
-        "username": "api_test@datacleaning4u.io",
+        "username": unique_user,
         "trigger_ai_summary": False,  # No external API call in unit test
         "dataset_overview": {
             "total_rows": 20,
@@ -147,14 +154,22 @@ def test_create_and_get_analysis_run_endpoint():
     assert res_data["status"] == "COMPLETED"
     assert res_data["findings_count"] == 1
     assert res_data["file_name"] == "healthcare_test.csv"
+    assert "DC4X-" in res_data["run_code"]
     run_id = res_data["run_id"]
+    run_code = res_data["run_code"]
 
-    # GET run
+    # GET run by ID
     get_resp = client.get(f"/api/v1/analysis/runs/{run_id}")
     assert get_resp.status_code == 200
     get_data = get_resp.json()
     assert get_data["run_id"] == run_id
     assert get_data["domain"] == "Healthcare"
+    assert len(get_data["findings"]) == 1
+
+    # GET run by run_code
+    get_code_resp = client.get(f"/api/v1/analysis/runs/{run_code}")
+    assert get_code_resp.status_code == 200
+    assert get_code_resp.json()["run_code"] == run_code
 
     # GET list
     list_resp = client.get("/api/v1/analysis/runs")

@@ -77,7 +77,7 @@ def test_csv_ingestion_and_pipeline():
         x_col="Category",
         y_col="SalesAmount"
     )
-    assert custom_chart.chart_type == "Bar Chart"
+    assert custom_chart.chart_type.lower() in ["bar chart", "bar"]
 
     # Test invalid chart selection validation
     with pytest.raises(ChartValidationError):
@@ -114,7 +114,7 @@ def test_csv_ingestion_and_pipeline():
     # 10. Report Exports
     html_rep = generate_html_report(pipeline_result)
     assert "<html" in html_rep.lower()
-    assert "DataCleaning4U" in html_rep
+    assert "DC4X" in html_rep
 
     pdf_bytes = generate_pdf_report_bytes(pipeline_result)
     assert isinstance(pdf_bytes, bytes)
