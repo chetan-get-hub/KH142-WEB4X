@@ -66,13 +66,23 @@ class GeminiService:
                 from google import genai
                 self.client = genai.Client(api_key=self.api_key)
             
-            res = self.client.models.generate_content(
-                model=self.model,
-                contents="Respond with the single word OK."
-            )
-            if res and res.text:
-                return True, f"Google Gemini Free-Tier ({self.model}) connected successfully."
-            return False, "Gemini API returned an empty response."
+            models_to_try = [self.model, "gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash"]
+            # Deduplicate while preserving order
+            unique_models = list(dict.fromkeys(models_to_try))
+            
+            last_err = ""
+            for m in unique_models:
+                try:
+                    res = self.client.models.generate_content(
+                        model=m,
+                        contents="Respond with the single word OK."
+                    )
+                    if res and res.text:
+                        return True, f"Google Gemini Free-Tier ({m}) connected successfully."
+                except Exception as ex:
+                    last_err = str(ex)
+                    continue
+            return False, f"Gemini connection failed: {last_err}"
         except Exception as e:
             return False, f"Gemini connection failed: {str(e)}"
 
@@ -83,6 +93,7 @@ class GeminiService:
         """
         Takes structured pipeline JSON and requests a structured executive explanation
         from Google Gemini Free-Tier API adhering strictly to calculated evidence.
+        Includes automatic multi-model failover for 429 rate limit resilience.
         """
         # 1. Check API Key availability
         if not self.is_available():
@@ -147,54 +158,53 @@ class GeminiService:
             "Generate a structured narrative explanation adhering strictly to the output schema."
         )
 
-        try:
-            from google.genai import types
+        models_to_try = [self.model, "gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash"]
+        unique_models = list(dict.fromkeys(models_to_try))
 
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=prompt_str,
-                config=types.GenerateContentConfig(
-                    system_instruction=system_instruction,
-                    response_mime_type="application/json",
-                    response_schema=AISummaryResponse,
-                    temperature=0.2
+        last_err_msg = ""
+        for current_model in unique_models:
+            try:
+                from google.genai import types
+
+                response = self.client.models.generate_content(
+                    model=current_model,
+                    contents=prompt_str,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_instruction,
+                        response_mime_type="application/json",
+                        response_schema=AISummaryResponse,
+                        temperature=0.2
+                    )
                 )
-            )
 
-            if response and response.text:
-                parsed_json = json.loads(response.text)
-                return {
-                    "status": "SUCCESS",
-                    "message": "AI narrative explanation generated successfully.",
-                    "ai_summary": parsed_json,
-                    "fallback_used": False,
-                    "model_used": self.model
-                }
-            else:
-                return {
-                    "status": "EMPTY_RESPONSE",
-                    "message": "Gemini API returned an empty response.",
-                    "ai_summary": None,
-                    "fallback_used": True,
-                    "model_used": self.model
-                }
+                if response and response.text:
+                    parsed_json = json.loads(response.text)
+                    return {
+                        "status": "SUCCESS",
+                        "message": "AI narrative explanation generated successfully.",
+                        "ai_summary": parsed_json,
+                        "fallback_used": False,
+                        "model_used": current_model
+                    }
+            except Exception as e:
+                err_msg = str(e)
+                last_err_msg = err_msg
+                logger.warning(f"Gemini API request with model {current_model} encountered error: {err_msg}")
+                # Try next model in list on rate limit or model unavailable
+                continue
 
-        except Exception as e:
-            err_msg = str(e)
-            logger.warning(f"Gemini API request encountered an error: {err_msg}")
-            
-            # Handle rate limit (429) specifically
-            if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg or "quota" in err_msg.lower():
-                status_label = "RATE_LIMIT_QUOTA_EXCEEDED"
-                user_friendly = "Gemini Free-Tier rate limit reached. Reverting to deterministic summary."
-            else:
-                status_label = "API_ERROR"
-                user_friendly = f"Gemini API Error ({err_msg}). Reverting to deterministic summary."
+        # If all candidate models failed, report status and revert to deterministic summary
+        if "429" in last_err_msg or "RESOURCE_EXHAUSTED" in last_err_msg or "quota" in last_err_msg.lower():
+            status_label = "RATE_LIMIT_QUOTA_EXCEEDED"
+            user_friendly = "Gemini Free-Tier rate limit reached across models. Reverting to deterministic summary."
+        else:
+            status_label = "API_ERROR"
+            user_friendly = f"Gemini API Error ({last_err_msg}). Reverting to deterministic summary."
 
-            return {
-                "status": status_label,
-                "message": user_friendly,
-                "ai_summary": None,
-                "fallback_used": True,
-                "model_used": self.model
-            }
+        return {
+            "status": status_label,
+            "message": user_friendly,
+            "ai_summary": None,
+            "fallback_used": True,
+            "model_used": self.model
+        }

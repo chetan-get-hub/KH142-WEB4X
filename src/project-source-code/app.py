@@ -7,6 +7,7 @@ import io
 import json
 from datetime import datetime
 import streamlit as st
+import streamlit.components.v1 as st_components
 import pandas as pd
 import plotly.io as pio
 
@@ -77,6 +78,10 @@ if "raw_df" not in st.session_state:
     st.session_state.raw_df = None
 if "app_mode" not in st.session_state:
     st.session_state.app_mode = "🚀 Analysis Engine"
+if "current_step" not in st.session_state:
+    st.session_state.current_step = 1
+if "scroll_to_top" not in st.session_state:
+    st.session_state.scroll_to_top = False
 if "theme_mode" not in st.session_state:
     st.session_state.theme_mode = "Dark Neon"
 if "db_lock_state" not in st.session_state:
@@ -206,6 +211,37 @@ if is_dark:
         .status-badge-ok { background-color: #064E3B; color: #6EE7B7; padding: 3px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; }
         .status-badge-warn { background-color: #78350F; color: #FDE68A; padding: 3px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; }
         .status-badge-err { background-color: #7F1D1D; color: #FECACA; padding: 3px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; }
+        /* Sidebar Logo Banner (Dark Neon) */
+        .dc4x-sidebar-banner {
+            background: linear-gradient(135deg, #12121C 0%, #171726 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 16px 14px 14px 14px;
+            text-align: center;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 229, 255, 0.06);
+        }
+        .dc4x-sidebar-logo {
+            font-family: 'Plus Jakarta Sans', 'Outfit', -apple-system, sans-serif;
+            font-size: 1.85rem;
+            font-weight: 900;
+            letter-spacing: -0.01em;
+            line-height: 1;
+            color: #F5EEDB;
+        }
+        .dc4x-sidebar-logo span {
+            color: #00E5FF;
+            text-shadow: 0 0 14px rgba(0, 229, 255, 0.6);
+        }
+        .dc4x-sidebar-tagline {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #94A3B8;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
     </style>
     """
 else:
@@ -346,6 +382,36 @@ else:
         .status-badge-ok { background-color: #DCFCE7; color: #15803D; padding: 3px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; }
         .status-badge-warn { background-color: #FEF3C7; color: #B45309; padding: 3px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; }
         .status-badge-err { background-color: #FEE2E2; color: #B91C1C; padding: 3px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; }
+        /* Sidebar Logo Banner (Clean Light) */
+        .dc4x-sidebar-banner {
+            background: linear-gradient(135deg, #FFFFFF 0%, #F1F5F9 100%);
+            border: 1px solid #E2E8F0;
+            border-radius: 14px;
+            padding: 16px 14px 14px 14px;
+            text-align: center;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(2, 132, 199, 0.05);
+        }
+        .dc4x-sidebar-logo {
+            font-family: 'Plus Jakarta Sans', 'Outfit', -apple-system, sans-serif;
+            font-size: 1.85rem;
+            font-weight: 900;
+            letter-spacing: -0.01em;
+            line-height: 1;
+            color: #0F172A;
+        }
+        .dc4x-sidebar-logo span {
+            color: #0284C7;
+        }
+        .dc4x-sidebar-tagline {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #64748B;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
     </style>
     """
 
@@ -362,7 +428,7 @@ if not st.session_state.authenticated:
     st.stop()
 
 # Top Navigation Bar (Rendered only for authenticated users)
-col_nav, col_user = st.columns([2.8, 1.7])
+col_nav, col_user = st.columns([2.5, 2.0])
 
 with col_nav:
     if st.session_state.authenticated:
@@ -382,10 +448,15 @@ with col_nav:
 
 with col_user:
     if st.session_state.authenticated:
-        u_col1, u_col2 = st.columns([2.2, 1.0])
-        with u_col1:
-            st.markdown(f"<div style='font-size: 0.9rem; font-weight: 600; color: {'#F5EEDB' if is_dark else '#0F172A'}; padding-top: 6px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;'>👤 {st.session_state.username}</div>", unsafe_allow_html=True)
-        with u_col2:
+        u_col_theme, u_col_name, u_col_logout = st.columns([1.05, 1.45, 0.9])
+        with u_col_theme:
+            theme_btn_label = "☀️ Light" if is_dark else "🌙 Dark"
+            if st.button(theme_btn_label, key="btn_nav_theme_toggle", help="Toggle Visual Theme (Dark Neon / Clean Light)", use_container_width=True):
+                st.session_state.theme_mode = "Clean Light" if is_dark else "Dark Neon"
+                st.rerun()
+        with u_col_name:
+            st.markdown(f"<div style='font-size: 0.88rem; font-weight: 600; color: {'#F5EEDB' if is_dark else '#0F172A'}; padding-top: 7px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;'>👤 {st.session_state.username}</div>", unsafe_allow_html=True)
+        with u_col_logout:
             if st.button("Logout", key="btn_logout", help="Sign out of DC4X", use_container_width=True):
                 st.session_state.authenticated = False
                 st.session_state.username = ""
@@ -569,21 +640,15 @@ if st.session_state.app_mode == "📜 Run History":
 # 4. MAIN ANALYSIS ENGINE WORKFLOW
 # -------------------------------------------------------------
 with st.sidebar:
-    st.header("⚙️ DC4X Control Panel")
+    # 1. DC4X Logo & Branding Banner
+    st.markdown("""
+    <div class="dc4x-sidebar-banner">
+        <div class="dc4x-sidebar-logo">DC<span>4</span>X</div>
+        <div class="dc4x-sidebar-tagline">Data Cleaning For You</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # Theme Switcher
-    st.subheader("🎨 Visual Theme")
-    theme_choice = st.radio(
-        "Select Mode:",
-        ["Dark Neon", "Clean Light"],
-        index=0 if st.session_state.theme_mode == "Dark Neon" else 1,
-        horizontal=True
-    )
-    if theme_choice != st.session_state.theme_mode:
-        st.session_state.theme_mode = theme_choice
-        st.rerun()
-
-    # 1. System Health Status Panel
+    # 2. System Health Status Panel
     with st.expander("🔌 System Health", expanded=True):
         be_badge = "status-badge-ok" if health_info.get("backend_online") else "status-badge-warn"
         be_text = "API ACTIVE (8000)" if health_info.get("backend_online") else "DIRECT RUNTIME"
@@ -615,6 +680,8 @@ with st.sidebar:
         st.session_state.pipeline_result = None
         st.session_state.backend_response = None
         st.session_state.pipeline_status = "READY"
+        st.session_state.current_step = 1
+        st.session_state.scroll_to_top = True
         st.rerun()
 
     st.caption(f"ℹ️ {DOMAIN_TAGLINES.get(st.session_state.selected_domain, '')}")
@@ -661,15 +728,14 @@ with st.sidebar:
 
     st.markdown("---")
 
-# Main Content Tabs for Analysis Engine
-tabs = st.tabs([
+STAGE_NAMES = [
     "📥 Ingestion & Profiling",
     "🧹 Data Cleaning",
     "📊 Statistical Engine",
     "⚠️ Anomaly Audit",
     "📈 Visualizations & Custom Builder",
     "🤖 Executive & AI Summary"
-])
+]
 
 file_input = uploaded_file or sample_file_path
 
@@ -784,9 +850,86 @@ except Exception as ex:
     st.stop()
 
 # -------------------------------------------------------------
-# TAB 1: INGESTION & PROFILING
+# WORKFLOW NAVIGATION & STAGE ROUTING
 # -------------------------------------------------------------
-with tabs[0]:
+# Scroll anchor at top of analysis section
+st.markdown('<div id="dc4x-analysis-top"></div>', unsafe_allow_html=True)
+
+# One-shot smooth scroll to top upon navigation event
+if st.session_state.get("scroll_to_top", False):
+    st_components.html(
+        """
+        <script>
+            setTimeout(function() {
+                var el = window.parent.document.getElementById('dc4x-analysis-top') || window.parent.document.querySelector('section.main');
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                    window.parent.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            }, 50);
+        </script>
+        """,
+        height=0,
+        width=0
+    )
+    st.session_state.scroll_to_top = False
+
+# Top Stage Stepper / Navigation Bar
+stage_cols = st.columns(6)
+for idx, (col, s_name) in enumerate(zip(stage_cols, STAGE_NAMES)):
+    with col:
+        is_active = (st.session_state.current_step == idx + 1)
+        if st.button(
+            s_name,
+            key=f"stage_nav_btn_{idx+1}",
+            type="primary" if is_active else "secondary",
+            use_container_width=True
+        ):
+            if st.session_state.current_step != idx + 1:
+                st.session_state.current_step = idx + 1
+                st.session_state.scroll_to_top = True
+                st.rerun()
+
+st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
+
+def render_workflow_navigation(current_step: int):
+    """
+    Renders bottom Next, Previous, and Back-to-Top workflow controls.
+    Updates st.session_state.current_step and triggers immediate deterministic rerun.
+    """
+    st.markdown("<div style='margin-top: 32px;'></div>", unsafe_allow_html=True)
+    st.markdown("---")
+    
+    col_prev, col_mid, col_next = st.columns([1.6, 1.2, 1.6])
+    
+    # Previous Button (Screens 2 to 6)
+    if current_step > 1:
+        with col_prev:
+            prev_label = f"← Previous: {STAGE_NAMES[current_step - 2].split(' ', 1)[1]}"
+            if st.button(prev_label, key=f"btn_nav_prev_step_{current_step}", use_container_width=True):
+                st.session_state.current_step = current_step - 1
+                st.session_state.scroll_to_top = True
+                st.rerun()
+    
+    # Next Button (Screens 1 to 5)
+    if current_step < 6:
+        with col_next:
+            next_label = f"Next: {STAGE_NAMES[current_step].split(' ', 1)[1]} →"
+            if st.button(next_label, key=f"btn_nav_next_step_{current_step}", type="primary", use_container_width=True):
+                st.session_state.current_step = current_step + 1
+                st.session_state.scroll_to_top = True
+                st.rerun()
+    elif current_step == 6:
+        with col_next:
+            if st.button("↑ Back to Top", key="btn_nav_top_step_6", use_container_width=True):
+                st.session_state.scroll_to_top = True
+                st.rerun()
+
+# -------------------------------------------------------------
+# SCREEN 1: INGESTION & PROFILING
+# -------------------------------------------------------------
+if st.session_state.current_step == 1:
     st.markdown('<div class="step-header">📥 Dataset Ingestion & Profiling Overview</div>', unsafe_allow_html=True)
     
     c1, c2, c3, c4 = st.columns(4)
@@ -815,11 +958,12 @@ with tabs[0]:
             "Sample Values": ", ".join(map(str, cinfo.sample_values[:3]))
         })
     st.dataframe(pd.DataFrame(col_prof_data), use_container_width=True)
+    render_workflow_navigation(1)
 
 # -------------------------------------------------------------
-# TAB 2: DATA CLEANING
+# SCREEN 2: DATA CLEANING
 # -------------------------------------------------------------
-with tabs[1]:
+elif st.session_state.current_step == 2:
     st.markdown('<div class="step-header">🧹 Data Hygiene & Cleaning Operations</div>', unsafe_allow_html=True)
     
     cl1, cl2, cl3 = st.columns(3)
@@ -849,11 +993,12 @@ with tabs[1]:
 
     st.subheader("✨ Cleaned Transformed Dataset Preview")
     st.dataframe(cleaned_df.head(25), use_container_width=True)
+    render_workflow_navigation(2)
 
 # -------------------------------------------------------------
-# TAB 3: STATISTICAL ENGINE & FINDINGS
+# SCREEN 3: STATISTICAL ENGINE & FINDINGS
 # -------------------------------------------------------------
-with tabs[2]:
+elif st.session_state.current_step == 3:
     st.markdown('<div class="step-header">📊 Statistical Engine & Domain Findings</div>', unsafe_allow_html=True)
 
     st.subheader("💡 Verified Evidence-Backed Findings")
@@ -880,11 +1025,12 @@ with tabs[2]:
     if analysis_rep.numerical_summary:
         num_summary_df = pd.DataFrame(analysis_rep.numerical_summary).T
         st.dataframe(num_summary_df, use_container_width=True)
+    render_workflow_navigation(3)
 
 # -------------------------------------------------------------
-# TAB 4: ANOMALY AUDIT
+# SCREEN 4: ANOMALY AUDIT
 # -------------------------------------------------------------
-with tabs[3]:
+elif st.session_state.current_step == 4:
     st.markdown('<div class="step-header">⚠️ Anomaly Detection & Risk Audit</div>', unsafe_allow_html=True)
 
     a1, a2, a3 = st.columns(3)
@@ -911,11 +1057,12 @@ with tabs[3]:
         st.dataframe(pd.DataFrame(anom_rows), use_container_width=True)
     else:
         st.success("✓ No anomalous observations detected in this dataset.")
+    render_workflow_navigation(4)
 
 # -------------------------------------------------------------
-# TAB 5: VISUALIZATIONS & CUSTOM BUILDER
+# SCREEN 5: VISUALIZATIONS & CUSTOM BUILDER
 # -------------------------------------------------------------
-with tabs[4]:
+elif st.session_state.current_step == 5:
     st.markdown('<div class="step-header">📈 Visualizations & Chart Builder</div>', unsafe_allow_html=True)
 
     # 1. Automatic Charts
@@ -958,11 +1105,12 @@ with tabs[4]:
                 st.warning(f"⚠️ {cve}")
             except Exception as e:
                 st.error(f"✕ Could not render custom chart: {e}")
+    render_workflow_navigation(5)
 
 # -------------------------------------------------------------
-# TAB 6: EXECUTIVE & AI SUMMARY
+# SCREEN 6: EXECUTIVE & AI SUMMARY
 # -------------------------------------------------------------
-with tabs[5]:
+elif st.session_state.current_step == 6:
     st.markdown('<div class="step-header">🤖 Executive AI Explanation & Diagnostic Summary</div>', unsafe_allow_html=True)
 
     be_res = st.session_state.backend_response or {}
@@ -975,7 +1123,7 @@ with tabs[5]:
         st.markdown(f"""
         <div class="ai-summary-box">
             <div style="font-weight: 700; font-size: 1.15rem; color: {'#B388FF' if is_dark else '#7C3AED'}; margin-bottom: 8px;">
-                ✨ Google Gemini AI Executive Narrative ({GEMINI_MODEL} - Free Tier)
+                ✨ Google Gemini AI Executive Narrative
             </div>
             <div>{ai_summary_obj.get("overall_summary", "")}</div>
         </div>
@@ -1074,3 +1222,4 @@ with tabs[5]:
         st.caption("Machine-readable payload stored in PostgreSQL and delivered to Gemini.")
         json_export = json.dumps(st.session_state.pipeline_result.to_serializable_dict(), indent=2)
         st.code(json_export, language="json")
+    render_workflow_navigation(6)
