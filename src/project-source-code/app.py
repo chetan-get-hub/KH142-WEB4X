@@ -362,35 +362,36 @@ if not st.session_state.authenticated:
     st.stop()
 
 # Top Navigation Bar (Rendered only for authenticated users)
-col_logo, col_nav, col_user = st.columns([2.5, 3, 1.5])
-
-with col_logo:
-    chosen_logo = LOGO_LIGHT_PATH if (not is_dark and os.path.exists(LOGO_LIGHT_PATH)) else LOGO_DARK_PATH if os.path.exists(LOGO_DARK_PATH) else LOGO_PATH
-    if os.path.exists(chosen_logo):
-        st.image(str(chosen_logo), width=230)
-    else:
-        st.markdown(f'<div class="brand-header-title">DC<span>4</span>X</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="brand-subtitle">{APP_DISPLAY_NAME}</div>', unsafe_allow_html=True)
+col_nav, col_user = st.columns([2.8, 1.7])
 
 with col_nav:
     if st.session_state.authenticated:
-        selected_mode = st.radio(
-            "Navigation",
-            ["🚀 Analysis Engine", "📜 Run History", "⚙️ System & Database"],
-            horizontal=True,
-            label_visibility="collapsed"
-        )
-        st.session_state.app_mode = selected_mode
+        n_col1, n_col2, n_col3 = st.columns([1.1, 1.0, 1.3])
+        with n_col1:
+            if st.button("🚀 Analysis Engine", key="nav_btn_engine", type="primary" if st.session_state.app_mode == "🚀 Analysis Engine" else "secondary", use_container_width=True):
+                st.session_state.app_mode = "🚀 Analysis Engine"
+                st.rerun()
+        with n_col2:
+            if st.button("📜 Run History", key="nav_btn_history", type="primary" if st.session_state.app_mode == "📜 Run History" else "secondary", use_container_width=True):
+                st.session_state.app_mode = "📜 Run History"
+                st.rerun()
+        with n_col3:
+            if st.button("⚙️ System & Database", key="nav_btn_system", type="primary" if st.session_state.app_mode == "⚙️ System & Database" else "secondary", use_container_width=True):
+                st.session_state.app_mode = "⚙️ System & Database"
+                st.rerun()
 
 with col_user:
     if st.session_state.authenticated:
-        st.markdown(f"<div style='font-size: 0.92rem; font-weight: 600; color: {'#F5EEDB' if is_dark else '#0F172A'}; margin-bottom: 4px;'>👤 {st.session_state.username}</div>", unsafe_allow_html=True)
-        if st.button("Logout", key="btn_logout", help="Sign out of DC4X"):
-            st.session_state.authenticated = False
-            st.session_state.username = ""
-            st.session_state.pipeline_result = None
-            st.session_state.backend_response = None
-            st.rerun()
+        u_col1, u_col2 = st.columns([2.2, 1.0])
+        with u_col1:
+            st.markdown(f"<div style='font-size: 0.9rem; font-weight: 600; color: {'#F5EEDB' if is_dark else '#0F172A'}; padding-top: 6px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;'>👤 {st.session_state.username}</div>", unsafe_allow_html=True)
+        with u_col2:
+            if st.button("Logout", key="btn_logout", help="Sign out of DC4X", use_container_width=True):
+                st.session_state.authenticated = False
+                st.session_state.username = ""
+                st.session_state.pipeline_result = None
+                st.session_state.backend_response = None
+                st.rerun()
 
 # -------------------------------------------------------------
 # 2. SYSTEM & DATABASE CONTROL VIEW
